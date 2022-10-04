@@ -170,7 +170,7 @@ class Raytracer(object):
         objectColor = np.array([material.diffuse[0],
                                 material.diffuse[1],
                                 material.diffuse[2]])
-
+        refractColor = np.array([0,0,0])
         if material.matType == OPAQUE:
             for light in self.lights:
                 diffuseColor = light.getDiffuseColor(intersect, self)

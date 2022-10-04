@@ -4,37 +4,49 @@ from figures import *
 from lights import *
 
 
-width = 512
-height = 512
+width = 256
+height = 256
+
+
+def BoxGenerator(position=V3(0,0,0), size=0.5, rtx=None, material=None):
+    x = position.x
+    y = position.y
+    z = position.z
+    
+    rtx.scene.append( AABB(V3(x,y-(size/2),z), V3(size,0,size), material) )
+    rtx.scene.append( AABB(V3(x,y+(size/2),z), V3(size,0,size), material) )
+    rtx.scene.append( AABB(V3(x-(size/2),y,z), V3(0,size,size), material) )
+    rtx.scene.append( AABB(V3(x+(size/2),y,z), V3(0,size,size), material) )
+    rtx.scene.append( AABB(V3(x,y,z-(size/2)), V3(size,size,0), material) )
+    rtx.scene.append( AABB(V3(x,y,z+(size/2)), V3(size,size,0), material) )
+
+
+
+
+
+
 
 # Materiales
+paredes = Material(diffuse = (0.4, 0.4, 0.4), spec = 32)
+Techo = Material(diffuse = (0.45, 0.45, 0.45), spec = 32)
+paredFondo = Material(diffuse = (0.3, 0.3, 0.3), spec = 32)
+piso = Material(diffuse = (0.7, 0.7, 0.7), spec = 64, matType = REFLECTIVE)
 
+mat1 = Material(diffuse = (0.9, 0.9, 0.2), spec = 64)
+mat2 = Material(diffuse = (0.9, 0.2, 0.2), spec = 64)
+mat3 = Material(diffuse = (0.2, 0.2, 0.9), spec = 64)
 
-r1 = Material(diffuse = (0.8, 0.3, 0.3), spec = 64, matType= REFLECTIVE)
-r2 = Material(diffuse = (0.9, 0.9, 0.2), spec = 64, matType = REFLECTIVE)
-
-t1 = Material(diffuse = (0.9, 0.9, 0.9), spec = 64, matType = TRANSPARENT, ior = 1.5)
-t2 = Material(diffuse = (0.9, 0.2, 0.9), spec = 64, matType = TRANSPARENT, ior = 2.3)
-
-o1 = Material(diffuse = (0.2, 0.2, 0.9), spec = 32)
-o2 = Material(diffuse = (0.9, 0.9, 0.2), spec = 32)
 
 rtx = Raytracer(width, height)
 
-rtx.envMap = Texture("fondo3.bmp")
 
-rtx.lights.append( AmbientLight(intensity = 0.1 ))
-rtx.lights.append( DirectionalLight(direction = (-1,-1,-1), intensity = 0.8 ))
-#rtx.lights.append( PointLight(point = (0,0,0)))
+rtx.lights.append( AmbientLight(intensity = 0.6 ))
+rtx.lights.append( PointLight(point = (0,0,-2) ))
 
-rtx.scene.append( Sphere(V3(0,0,-10), 1, t1)  )
-rtx.scene.append( Sphere(V3(3,0,-10), 1, t2)  )
 
-rtx.scene.append( Sphere(V3(0,3,-10), 1, r1)  )
-rtx.scene.append( Sphere(V3(3,3,-10), 1, r2)  )
-
-rtx.scene.append( Sphere(V3(0,-3,-10),1, o1)  )
-rtx.scene.append( Sphere(V3(3,-3,-10), 1, o2)  )
+rtx.scene.append( Triangle(V3(-3,0,-7), V3(3,0,-7), V3(0,3,-7), material = mat1) )
+rtx.scene.append( Triangle(V3(-3,0,-7), V3(3,0,-7), V3(0,-3,-7), material = mat2) )
+rtx.scene.append( Triangle(V3(3,0,-7), V3(0,3,-7), V3(4,3,-10), material = mat3) )
 
 
 rtx.glRender()
