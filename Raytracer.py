@@ -27,17 +27,18 @@ def BoxGenerator(position=V3(0,0,0), size=0.5, rtx=None, material=None):
 
 
 # Materiales
-paredes = Material(diffuse = (0.4, 0.4, 0.4), spec = 32)
-Techo = Material(diffuse = (0.45, 0.45, 0.45), spec = 32)
-paredFondo = Material(diffuse = (0.3, 0.3, 0.3), spec = 32)
-piso = Material(diffuse = (0.7, 0.7, 0.7), spec = 64, matType = REFLECTIVE)
+# paredes = Material(diffuse = (0.4, 0.4, 0.4), spec = 32)
+# Techo = Material(diffuse = (0.45, 0.45, 0.45), spec = 32)
+# paredFondo = Material(diffuse = (0.3, 0.3, 0.3), spec = 32)
+# piso = Material(diffuse = (0.7, 0.7, 0.7), spec = 64, matType = REFLECTIVE)
 
-mat1 = Material(diffuse = (0.9, 0.9, 0.2), spec = 64)
-mat2 = Material(diffuse = (0.9, 0.2, 0.2), spec = 64)
-mat3 = Material(diffuse = (0.2, 0.2, 0.9), spec = 64)
+mat1 = Material(diffuse = (0.9, 0.9, 0.2), spec = 64, matType = REFLECTIVE)
+mat2 = Material(diffuse = (0.9, 0.2, 0.2), spec = 64, matType = TRANSPARENT)
+mat3 = Material(diffuse = (0.2, 0.2, 0.9), spec = 64, matType = OPAQUE)
 
 
 rtx = Raytracer(width, height)
+rtx.envMap = Texture("fondo2.bmp")
 
 
 rtx.lights.append( AmbientLight(intensity = 0.6 ))
