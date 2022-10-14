@@ -8,32 +8,11 @@ from obj import Obj
 
 
 STEPS = 1
-MAX_RECURSION_DEPTH = 3
+MAX_RECURSION_DEPTH = 4
 
 V2 = namedtuple('Point2', ['x', 'y'])
 V3 = namedtuple('Point3', ['x', 'y', 'z'])
 V4 = namedtuple('Point4', ['x', 'y', 'z', 'w'])
-
-def refractVector(normal, dirVector, ior):
-    # Snell's Law
-    cosi = max(-1, min(1 , np.dot(dirVector, normal)))
-    etai = 1
-    etat = ior
-
-    if cosi < 0:
-        cosi = -cosi
-    else:
-        etai, etat = etat, etai
-        normal = np.array(normal) * -1
-
-    eta = etai/etat
-    k = 1 - eta * eta * (1 - (cosi * cosi))
-
-    if k < 0: #Total Internal Reflection
-        return None
-
-    R = eta * np.array(dirVector) + (eta * cosi - k**0.5) * np.array(normal)
-    return R / np.linalg.norm(R)
 
 def char(c):
     #1 byte
@@ -69,26 +48,6 @@ def baryCoords(A, B, C, P):
         return -1, -1, -1
     else:
         return u, v, w
-
-def fresnel(normal, dirVector, ior):
-    cosi = max(-1, min(1 , np.dot(dirVector, normal)))
-    etai = 1
-    etat = ior
-
-    if cosi > 0:
-        etai, etat = etat, etai
-
-    sint = etai / etat * (max(0, 1 - cosi * cosi) ** 0.5)
-
-    if sint >= 1: #Total internal reflection
-        return 1
-
-    cost = max(0, 1 - sint * sint) ** 0.5
-    cosi = abs(cosi)
-    Rs = ((etat * cosi) - (etai * cost)) / ((etat * cosi) + (etai * cost))
-    Rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost))
-
-    return (Rs * Rs + Rp * Rp) / 2
 
 class Raytracer(object):
     def __init__(self, width, height):
@@ -170,7 +129,7 @@ class Raytracer(object):
         objectColor = np.array([material.diffuse[0],
                                 material.diffuse[1],
                                 material.diffuse[2]])
-        refractColor = np.array([0,0,0])
+
         if material.matType == OPAQUE:
             for light in self.lights:
                 diffuseColor = light.getDiffuseColor(intersect, self)
@@ -194,25 +153,35 @@ class Raytracer(object):
 
         elif material.matType == TRANSPARENT:
             outside = np.dot(dir, intersect.normal) < 0
-            bias =  Math.number_multiply_matrix( 0.001 , intersect.normal)
-            kr = fresnel(intersect.normal, dir, material.ior)
+            bias = intersect.normal * 0.001
+
             specColor = np.array([0,0,0])
+            for light in self.lights:
+                specColor = np.add(specColor, light.getSpecColor(intersect, self))
 
             reflect = reflectVector(intersect.normal, np.array(dir) * -1)
             reflectOrig = np.add(intersect.point, bias) if outside else np.subtract(intersect.point, bias)
             reflectColor = self.cast_ray(reflectOrig, reflect, None, recursion + 1)
             reflectColor = np.array(reflectColor)
-            for light in self.lights:
-                specColor = np.add(specColor, light.getSpecColor(intersect, self))
+
+            kr = fresnel(intersect.normal, dir, material.ior)
+
+            refractColor = np.array([0,0,0])
             if kr < 1:
-                refract = refractVector(intersect.normal, dir, material.ior )
+                refract = refractVector(intersect.normal, dir, material.ior)
                 refractOrig = np.subtract(intersect.point, bias) if outside else np.add(intersect.point, bias)
                 refractColor = self.cast_ray(refractOrig, refract, None, recursion + 1)
                 refractColor = np.array(refractColor)
 
             finalColor = reflectColor * kr + refractColor * (1 - kr) + specColor
 
+
         finalColor *= objectColor
+
+        if material.texture and intersect.texcoords:
+            texColor = material.texture.getColor(intersect.texcoords[0], intersect.texcoords[1])
+            if texColor is not None:
+                finalColor *= np.array(texColor)
 
         r = min(1, finalColor[0])
         g = min(1, finalColor[1])
@@ -220,8 +189,6 @@ class Raytracer(object):
 
         return (r,g,b)
 
-
-    
 
     def glRender(self):
         # Proyeccion
@@ -273,9 +240,6 @@ class Raytracer(object):
             for y in range(self.height):
                 for x in range(self.width):
                     file.write(self.pixels[x][y])
-
-
-
 
 
 

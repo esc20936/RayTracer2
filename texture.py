@@ -1,4 +1,3 @@
-
 import struct
 import numpy as np
 from numpy import arctan2, arccos, pi
@@ -42,9 +41,6 @@ class Texture(object):
         y = int(arccos(-dir[1]) / pi * self.height)
 
         return self.pixels[y][x]
-
-
-
 
 
 

@@ -11,6 +11,52 @@ def reflectVector(normal, direction):
     reflect = reflect / np.linalg.norm(reflect)
     return reflect
 
+def refractVector(normal, direction, ior):
+    # Snell's Law
+    cosi = max(-1, min(1, np.dot(direction, normal)))
+    etai = 1
+    etat = ior
+
+    if cosi < 0:
+        cosi = -cosi
+    else:
+        etai, etat = etat, etai
+        normal = np.array(normal) * -1
+
+    eta = etai / etat
+    k = 1 - (eta**2) * (1 - (cosi**2) )
+
+    if k < 0: # Total Internal Reflection
+        return None
+
+    R = eta * np.array(direction) + (eta * cosi - k**0.5) * normal
+    return R
+
+
+def fresnel(normal, direction, ior):
+    # Fresnel Equation
+    cosi = max(-1, min(1, np.dot(direction, normal)))
+    etai = 1
+    etat = ior
+
+    if cosi > 0:
+        etai, etat = etat, etai
+
+    sint = etai / etat * (max(0, 1 - cosi**2) ** 0.5)
+
+
+    if sint >= 1: # Total Internal Reflection
+        return 1
+
+    cost = max(0, 1 - sint**2) ** 0.5
+    cosi = abs(cosi)
+
+    Rs = ((etat * cosi) - (etai * cost)) / ((etat * cosi) + (etai * cost))
+    Rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost))
+
+    return (Rs**2 + Rp**2) / 2
+
+
 class DirectionalLight(object):
     def __init__(self, direction = (0,-1,0), intensity = 1, color = (1,1,1)):
         self.direction = direction / np.linalg.norm(direction)
@@ -103,12 +149,14 @@ class PointLight(object):
 
     def getShadowIntensity(self, intersect, raytracer):
         light_dir = np.subtract(self.point, intersect.point)
-        light_dir = light_dir / np.linalg.norm(light_dir)
+        light_distance = np.linalg.norm(light_dir)
+        light_dir = light_dir / light_distance
 
         shadow_intensity = 0
         shadow_intersect = raytracer.scene_intersect(intersect.point, light_dir, intersect.sceneObj)
         if shadow_intersect:
-            shadow_intensity = 1
+            if shadow_intersect.distance < light_distance:
+                shadow_intensity = 1
 
         return shadow_intensity
 
