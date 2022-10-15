@@ -254,7 +254,7 @@ class Triangle(object):
             return Intersect( distance = t,
                               point = hit,
                               normal = normal,
-                              texCoords = (u, v),
+                              texcoords = (u, v),
                               sceneObj = self)
 
         else:
